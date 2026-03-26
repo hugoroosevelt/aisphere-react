@@ -50,15 +50,21 @@ export default function App() {
       });
 
       map.addLayer({
-        map.on("click", "points", (e) => {
-  const f = e.features[0];
+      map.on("click", (e) => {
+  const features = map.queryRenderedFeatures(e.point, {
+    layers: ["points"]
+  });
+
+  if (!features.length) return;
+
+  const f = features[0];
 
   new mapboxgl.Popup()
     .setLngLat(f.geometry.coordinates)
     .setHTML(`
       <strong>${f.properties.country}</strong><br/>
       Rank: #${f.properties.rank}<br/>
-      🔥 ${f.properties.keywords.join(" • ")}
+      🔥 ${(f.properties.keywords || []).join(" • ")}
     `)
     .addTo(map);
 });
