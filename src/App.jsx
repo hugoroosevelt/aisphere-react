@@ -18,10 +18,8 @@ export default function App() {
   const [topRegion, setTopRegion] = useState("Loading...");
   const [topThree, setTopThree] = useState([]);
   const [liveCount, setLiveCount] = useState(2440000);
-  const [mexicoData, setMexicoData] = useState(null);
-  const [usaData, setUsaData] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
 
+  // 🔢 LIVE COUNTER
   useEffect(() => {
     const interval = setInterval(() => {
       setLiveCount(prev => prev + Math.floor(Math.random() * 200));
@@ -29,6 +27,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // 🌍 MAP
   useEffect(() => {
     if (mapRef.current) return;
 
@@ -37,121 +36,25 @@ export default function App() {
       style: "mapbox://styles/mapbox/dark-v11",
       center: [0, 20],
       zoom: 1.5,
-      projection: "globe"
+      projection: "mercator" // safer than globe
     });
 
     mapRef.current = map;
 
-    map.on("style.load", () => {
-      map.setFog({});
-    });
-
     map.on("load", () => {
+      console.log("MAP LOADED ✅");
 
-  map.addSource("points", {
-    type: "geojson",
-    data: {
-      type: "FeatureCollection",
-      features: []
-    }
-  });
-
-  map.addLayer({
-    id: "points",
-    type: "circle",
-    source: "points",
-    paint: {
-      "circle-radius": 8,
-      "circle-color": "#00ff88"
-    }
-  });
-
-  // ✅ CLICK HANDLER
-  map.on("click", (e) => {
-    const features = map.queryRenderedFeatures(e.point, {
-      layers: ["points"]
-    });
-
-    if (!features.length) return;
-
-    const f = features[0];
-
-    new mapboxgl.Popup()
-      .setLngLat(f.geometry.coordinates)
-      .setHTML(`
-        <strong>${f.properties.country}</strong><br/>
-        Rank: #${f.properties.rank}<br/>
-        🔥 ${(f.properties.keywords || []).join(" • ")}
-      `)
-      .addTo(map);
-  });
-
-  // 🔥 ADD THIS WHOLE BLOCK 👇
-  const fetchData = async () => {
-    try {
-      const res = await fetch("https://aisphere-api.onrender.com/trends");
-      const data = await res.json();
-
-      const sorted = [...data].sort((a, b) => b.score - a.score);
-
-      console.log("SORTED 👉", sorted);
-
-      // update UI
-      setTopRegion(sorted[0]?.country || "N/A");
-      setTopThree(sorted.slice(0, 5));
-
-      // build map features
-      const features = sorted.map((item, index) => ({
-        type: "Feature",
-        properties: {
-          country: item.country,
-          rank: index + 1,
-          keywords: item.keywords || []
-        },
-        geometry: {
-          type: "Point",
-          coordinates: countryCoords[item.country] || [0, 0]
+      // SOURCE
+      map.addSource("points", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: []
         }
-      }));
-
-      map.getSource("points").setData({
-        type: "FeatureCollection",
-        features
       });
 
-    } catch (err) {
-      console.error("API ERROR:", err);
-    }
-  };
-
-  // 🚀 CALL IT
-  fetchData();
-
-  // ⏱ OPTIONAL AUTO REFRESH
-  setInterval(fetchData, 10000);
-
-});
-
-
-// ✅ CLICK HANDLER (OUTSIDE addLayer)
-map.on("click", (e) => {
-  const features = map.queryRenderedFeatures(e.point, {
-    layers: ["points"]
-  });
-
-  if (!features.length) return;
-
-  const f = features[0];
-
-  new mapboxgl.Popup()
-    .setLngLat(f.geometry.coordinates)
-    .setHTML(`
-      <strong>${f.properties.country}</strong><br/>
-      Rank: #${f.properties.rank}<br/>
-      🔥 ${(f.properties.keywords || []).join(" • ")}
-    `)
-    .addTo(map);
-});
+      // LAYER
+      map.addLayer({
         id: "points",
         type: "circle",
         source: "points",
@@ -161,70 +64,51 @@ map.on("click", (e) => {
         }
       });
 
+      // CLICK HANDLER
+      map.on("click", (e) => {
+        const features = map.queryRenderedFeatures(e.point, {
+          layers: ["points"]
+        });
+
+        if (!features.length) return;
+
+        const f = features[0];
+
+        new mapboxgl.Popup()
+          .setLngLat(f.geometry.coordinates)
+          .setHTML(`
+            <strong>${f.properties.country}</strong><br/>
+            Rank: #${f.properties.rank}<br/>
+            🔥 ${(f.properties.keywords || []).join(" • ")}
+          `)
+          .addTo(map);
+      });
+
+      // DATA FETCH
       const fetchData = async () => {
+        console.log("FETCH STARTED 🔥");
+
         try {
           const res = await fetch("https://aisphere-api.onrender.com/trends");
           const data = await res.json();
 
           const sorted = [...data].sort((a, b) => b.score - a.score);
 
-           console.log("SORTED DATA 👉", sorted);
+          console.log("SORTED 👉", sorted);
 
           setTopRegion(sorted[0]?.country || "N/A");
           setTopThree(sorted.slice(0, 5));
 
-          // 🇲🇽 Mexico
-const mexico = sorted.find(i => i.country === "Mexico");
-setMexicoData(
-  mexico
-    ? {
-        rank: sorted.indexOf(mexico) + 1,
-        keywords: mexico.keywords
-      }
-    : null
-);
-
-// 🇺🇸 USA
-const usa = sorted.find(i => i.country === "United States");
-setUsaData(
-  usa
-    ? {
-        rank: sorted.indexOf(usa) + 1,
-        keywords: usa.keywords
-      }
-    : null
-);
-
-// 🕒 timestamp
-setLastUpdated(new Date());
-   const features = sorted.map((item, index) => ({
-  type: "Feature",
-  properties: {
-    country: item.country,
-    rank: index + 1,
-    keywords: item.keywords || []
-  },
-  geometry: {
-    type: "Point",
-    coordinates: countryCoords[item.country] || [0, 0]
-  }
-}));       
-  type: "Feature",
-  properties: {
-    country: item.country,
-    rank: index + 1,
-    keywords: item.keywords || []
-  },
-  geometry: {
-    type: "Point",
-    coordinates: countryCoords[item.country] || [0, 0]
-  }
-}));
+          const features = sorted.map((item, index) => ({
             type: "Feature",
-            properties: { country: item.country },
+            properties: {
+              country: item.country,
+              rank: index + 1,
+              keywords: item.keywords || []
+            },
             geometry: {
               type: "Point",
-              coordinates: countryCoords[item.country] || [0,0]
+              coordinates: countryCoords[item.country] || [0, 0]
             }
           }));
 
@@ -233,55 +117,53 @@ setLastUpdated(new Date());
             features
           });
 
-        } catch (e) {
-          console.error(e);
+        } catch (err) {
+          console.error("API ERROR:", err);
         }
       };
 
       fetchData();
+      setInterval(fetchData, 10000);
     });
 
   }, []);
 
   return (
-  <div style={{ position: "relative" }}>
-    <div ref={mapContainer} style={{ height: "100vh" }} />
+    <div style={{ position: "relative" }}>
+      <div ref={mapContainer} style={{ height: "100vh" }} />
 
-    <div style={{
-      position: "absolute",
-      top: 20,
-      left: 20,
-      background: "rgba(0,0,0,0.75)",
-      color: "white",
-      padding: "18px",
-      borderRadius: "14px"
-    }}>
-      <h3>🌐 AI Search Activity</h3>
-      <h1 style={{ color: "yellow" }}>VERSION 5</h1>  
-      <p>{liveCount.toLocaleString()}</p>
-      <p>Top Region: {topRegion}</p>
+      {/* PANEL */}
+      <div style={{
+        position: "absolute",
+        top: 20,
+        left: 20,
+        background: "rgba(0,0,0,0.75)",
+        color: "white",
+        padding: "18px",
+        borderRadius: "14px",
+        width: "260px"
+      }}>
+        <h3>🌐 AI Search Activity</h3>
 
-      <div style={{ marginTop: "10px" }}>
-        <strong>Top Countries:</strong>
+        <p>{liveCount.toLocaleString()}</p>
+        <p>Top Region: {topRegion}</p>
 
-        {topThree.map((item, i) => (
-          <div key={i} style={{ marginBottom: "6px" }}>
-            <div>{i + 1}. {item.country}</div>
+        <div style={{ marginTop: "10px" }}>
+          <strong>Top Countries:</strong>
 
-            {item.keywords && (
-              <div style={{ fontSize: "11px", opacity: 0.7 }}>
-                🔥 {item.keywords.join(" • ")}
-              </div>
-            )}
-          </div>
-        ))}
+          {topThree.map((item, i) => (
+            <div key={i} style={{ marginBottom: "6px" }}>
+              <div>{i + 1}. {item.country}</div>
+
+              {item.keywords && (
+                <div style={{ fontSize: "11px", opacity: 0.7 }}>
+                  🔥 {item.keywords.join(" • ")}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
-
-      {lastUpdated && (
-        <p style={{ fontSize: "12px", opacity: 0.7 }}>
-          Last updated: {lastUpdated.toLocaleTimeString()}
-        </p>
-      )}
     </div>
-  </div>
-);
+  );
+}
