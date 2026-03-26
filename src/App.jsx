@@ -182,7 +182,7 @@ setInterval(fetchData, 10000);
         backdropFilter: "blur(10px)"
       }}>
         <h3>🌐 AI Search Activity</h3>
-
+       <p style={{ color: "red" }}>VERSION 3</p>
         <p><strong>Live Requests:</strong><br/>
           {liveCount.toLocaleString()}
         </p>
@@ -309,11 +309,25 @@ setTopThree(sorted.slice(0, 10));
 
 // 🇲🇽 Mexico
 const mexico = sorted.find(i => i.country === "Mexico");
-setMexicoData(mexico ? { rank: sorted.indexOf(mexico) + 1 } : null);
+setMexicoData(
+  mexico
+    ? {
+        rank: sorted.indexOf(mexico) + 1,
+        keywords: mexico.keywords
+      }
+    : null
+);
 
 // 🇺🇸 USA
 const usa = sorted.find(i => i.country === "United States");
-setUsaData(usa ? { rank: sorted.indexOf(usa) + 1 } : null);
+setUsaData(
+  usa
+    ? {
+        rank: sorted.indexOf(usa) + 1,
+        keywords: usa.keywords
+      }
+    : null
+);
 
 // 🕒 timestamp
 setLastUpdated(new Date());
@@ -374,7 +388,7 @@ setInterval(fetchData, 10000);
         width: "260px",
         backdropFilter: "blur(10px)"
       }}>
-        <h3>🌐 AI Search Activity</h3>
+        <h3 style={{ color: "red" }}>🔥 TEST VERSION 🔥</h3>
 
         <p><strong>Live Requests:</strong><br/>
           {liveCount.toLocaleString()}
@@ -397,11 +411,19 @@ setInterval(fetchData, 10000);
         )}
 
         <div style={{ marginTop: "15px" }}>
-          <strong>Top Countries:</strong>
-          {topThree.map((item, i) => (
-            <p key={i}>{i + 1}. {item.country}</p>
-          ))}
-        </div>
+  <strong>Top Countries:</strong>
+  {topThree.map((item, i) => (
+  <div key={i} style={{ marginBottom: "8px" }}>
+    <div>{i + 1}. {item.country}</div>
+
+    {item.keywords && (
+      <div style={{ fontSize: "11px", opacity: 0.7 }}>
+        🔥 {item.keywords.join(" • ")}
+      </div>
+    )}
+  </div>
+))}
+</div>
 
         <p>Status: Active</p>
 
