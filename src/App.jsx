@@ -85,7 +85,20 @@ export default function App() {
       const fetchData = async () => {
         try {
           const res = await fetch("https://aisphere-api.onrender.com/trends");
-          const data = await res.json();
+          let data = [];
+
+try {
+  const res = await fetch("https://aisphere-api.onrender.com/trends");
+  data = await res.json();
+} catch (err) {
+  console.error("API failed — using fallback");
+
+  data = [
+    { country: "United States", score: 80, keywords: ["AI", "ChatGPT"] },
+    { country: "Mexico", score: 70, keywords: ["IA", "ChatGPT"] },
+    { country: "Brazil", score: 75, keywords: ["IA", "OpenAI"] }
+  ];
+}
 
           const sorted = [...data].sort((a, b) => b.score - a.score);
 
@@ -144,8 +157,11 @@ export default function App() {
   }, []);
 
   return (
-    <div style={{ position: "relative" }}>
-      <div ref={mapContainer} style={{ height: "100vh" }} />
+  <div style={{ position: "relative" }}>
+
+    <h1 style={{ color: "yellow" }}>APP LOADING</h1>
+
+    <div ref={mapContainer} style={{ height: "100vh" }} />
 
       <div style={{
         position: "absolute",
