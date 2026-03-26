@@ -50,6 +50,18 @@ export default function App() {
       });
 
       map.addLayer({
+        map.on("click", "points", (e) => {
+  const f = e.features[0];
+
+  new mapboxgl.Popup()
+    .setLngLat(f.geometry.coordinates)
+    .setHTML(`
+      <strong>${f.properties.country}</strong><br/>
+      Rank: #${f.properties.rank}<br/>
+      🔥 ${f.properties.keywords.join(" • ")}
+    `)
+    .addTo(map);
+});
         id: "points",
         type: "circle",
         source: "points",
@@ -69,7 +81,29 @@ export default function App() {
           setTopRegion(sorted[0]?.country || "N/A");
           setTopThree(sorted.slice(0, 5));
 
-          const features = sorted.map(item => ({
+          const features = sorted.map((item, index) => ({
+  type: "Feature",
+  properties: {
+    country: item.country,
+    rank: index + 1,
+    keywords: item.keywords || []
+  },
+  geometry: {
+    type: "Point",
+    coordinates: countryCoords[item.country] || [0, 0]
+  }
+}));
+  type: "Feature",
+  properties: {
+    country: item.country,
+    rank: index + 1,
+    keywords: item.keywords || []
+  },
+  geometry: {
+    type: "Point",
+    coordinates: countryCoords[item.country] || [0, 0]
+  }
+}));
             type: "Feature",
             properties: { country: item.country },
             geometry: {
@@ -113,7 +147,7 @@ export default function App() {
 
         <div style={{ marginTop: "10px" }}>
   <strong>Top Countries:</strong>
-  
+
           {topThree.map((item, i) => (
             <div key={i}>
               {i + 1}. {item.country}
