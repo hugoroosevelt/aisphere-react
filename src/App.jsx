@@ -18,6 +18,9 @@ export default function App() {
   const [topRegion, setTopRegion] = useState("Loading...");
   const [topThree, setTopThree] = useState([]);
   const [liveCount, setLiveCount] = useState(2440000);
+  const [mexicoData, setMexicoData] = useState(null);
+  const [usaData, setUsaData] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -49,8 +52,18 @@ export default function App() {
         data: { type: "FeatureCollection", features: [] }
       });
 
-      map.addLayer({
-      map.on("click", (e) => {
+     map.addLayer({
+  id: "points",
+  type: "circle",
+  source: "points",
+  paint: {
+    "circle-radius": 8,
+    "circle-color": "#00ff88"
+  }
+});
+
+// ✅ CLICK HANDLER (OUTSIDE addLayer)
+map.on("click", (e) => {
   const features = map.queryRenderedFeatures(e.point, {
     layers: ["points"]
   });
@@ -87,7 +100,31 @@ export default function App() {
           setTopRegion(sorted[0]?.country || "N/A");
           setTopThree(sorted.slice(0, 5));
 
-          const features = sorted.map((item, index) => ({
+          // 🇲🇽 Mexico
+const mexico = sorted.find(i => i.country === "Mexico");
+setMexicoData(
+  mexico
+    ? {
+        rank: sorted.indexOf(mexico) + 1,
+        keywords: mexico.keywords
+      }
+    : null
+);
+
+// 🇺🇸 USA
+const usa = sorted.find(i => i.country === "United States");
+setUsaData(
+  usa
+    ? {
+        rank: sorted.indexOf(usa) + 1,
+        keywords: usa.keywords
+      }
+    : null
+);
+
+// 🕒 timestamp
+setLastUpdated(new Date());
+   const features = sorted.map((item, index) => ({
   type: "Feature",
   properties: {
     country: item.country,
@@ -98,7 +135,7 @@ export default function App() {
     type: "Point",
     coordinates: countryCoords[item.country] || [0, 0]
   }
-}));
+}));       
   type: "Feature",
   properties: {
     country: item.country,
@@ -134,33 +171,44 @@ export default function App() {
   }, []);
 
   return (
-    <div style={{ position: "relative" }}>
-      <div ref={mapContainer} style={{ height: "100vh" }} />
+  <div style={{ position: "relative" }}>
+    <div ref={mapContainer} style={{ height: "100vh" }} />
 
-      <div style={{
-        position: "absolute",
-        top: 20,
-        left: 20,
-        background: "rgba(0,0,0,0.75)",
-        color: "white",
-        padding: "18px",
-        borderRadius: "14px"
-      }}>
-        <h3>🌐 AI Search Activity</h3>
+    <div style={{
+      position: "absolute",
+      top: 20,
+      left: 20,
+      background: "rgba(0,0,0,0.75)",
+      color: "white",
+      padding: "18px",
+      borderRadius: "14px"
+    }}>
+      <h3>🌐 AI Search Activity</h3>
 
-        <p>{liveCount.toLocaleString()}</p>
-        <p>Top Region: {topRegion}</p>
+      <p>{liveCount.toLocaleString()}</p>
+      <p>Top Region: {topRegion}</p>
 
-        <div style={{ marginTop: "10px" }}>
-  <strong>Top Countries:</strong>
+      <div style={{ marginTop: "10px" }}>
+        <strong>Top Countries:</strong>
 
-          {topThree.map((item, i) => (
-            <div key={i}>
-              {i + 1}. {item.country}
-            </div>
-          ))}
-        </div>
+        {topThree.map((item, i) => (
+          <div key={i} style={{ marginBottom: "6px" }}>
+            <div>{i + 1}. {item.country}</div>
+
+            {item.keywords && (
+              <div style={{ fontSize: "11px", opacity: 0.7 }}>
+                🔥 {item.keywords.join(" • ")}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
+
+      {lastUpdated && (
+        <p style={{ fontSize: "12px", opacity: 0.7 }}>
+          Last updated: {lastUpdated.toLocaleTimeString()}
+        </p>
+      )}
     </div>
-  );
-}
+  </div>
+);
