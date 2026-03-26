@@ -155,11 +155,15 @@ export default function App() {
             <div key={i} style={{ marginBottom: "6px" }}>
               <div>{i + 1}. {item.country}</div>
 
-              {item.keywords && (
-                <div style={{ fontSize: "11px", opacity: 0.7 }}>
-                  🔥 {item.keywords.join(" • ")}
-                </div>
-              )}
+             {item.keywords && item.keywords.length > 0 ? (
+  <div style={{ fontSize: "11px", opacity: 0.7 }}>
+    🔥 {item.keywords.join(" • ")}
+  </div>
+) : (
+  <div style={{ fontSize: "11px", opacity: 0.4 }}>
+    🔥 No keywords available
+  </div>
+)}
             </div>
           ))}
         </div>
