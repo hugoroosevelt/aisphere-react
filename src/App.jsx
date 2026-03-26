@@ -111,7 +111,9 @@ export default function App() {
         <p>{liveCount.toLocaleString()}</p>
         <p>Top Region: {topRegion}</p>
 
-        <div>
+        <div style={{ marginTop: "10px" }}>
+  <strong>Top Countries:</strong>
+  
           {topThree.map((item, i) => (
             <div key={i}>
               {i + 1}. {item.country}
