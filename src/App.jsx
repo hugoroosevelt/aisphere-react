@@ -167,15 +167,17 @@ if (source) {
 
       {/* PANEL */}
       <div style={{
-        position: "absolute",
-        top: 20,
-        left: 20,
-        background: "rgba(0,0,0,0.75)",
-        color: "white",
-        padding: "18px",
-        borderRadius: "14px",
-        width: "260px"
-      }}>
+  position: "absolute",
+  top: 20,
+  left: 20,
+  background: "rgba(0,0,0,0.75)",
+  color: "white",
+  padding: "18px",
+  borderRadius: "14px",
+  width: "260px",
+  maxHeight: "80vh",        // ✅ LIMIT HEIGHT
+  overflowY: "auto"         // ✅ ENABLE SCROLL
+}}>
         <h3>🌐 AI Search Activity</h3>
 
         <p>{liveCount.toLocaleString()}</p>
