@@ -86,6 +86,7 @@ export default function App() {
       .addTo(map);
   });
 
+  // 🔥 ADD THIS WHOLE BLOCK 👇
   const fetchData = async () => {
     try {
       const res = await fetch("https://aisphere-api.onrender.com/trends");
@@ -95,9 +96,11 @@ export default function App() {
 
       console.log("SORTED 👉", sorted);
 
+      // update UI
       setTopRegion(sorted[0]?.country || "N/A");
       setTopThree(sorted.slice(0, 5));
 
+      // build map features
       const features = sorted.map((item, index) => ({
         type: "Feature",
         properties: {
@@ -117,12 +120,18 @@ export default function App() {
       });
 
     } catch (err) {
-      console.error(err);
+      console.error("API ERROR:", err);
     }
   };
 
+  // 🚀 CALL IT
   fetchData();
+
+  // ⏱ OPTIONAL AUTO REFRESH
+  setInterval(fetchData, 10000);
+
 });
+
 
 // ✅ CLICK HANDLER (OUTSIDE addLayer)
 map.on("click", (e) => {
