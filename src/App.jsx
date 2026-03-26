@@ -196,6 +196,7 @@ Rank: #{mexicoData.rank}
 <div style={{ fontSize: "11px", opacity: 0.7 }}>
   🔥 {mexicoData.keywords?.join(" • ")}
 </div>
+</div>
         )}
 
         {usaData && (
