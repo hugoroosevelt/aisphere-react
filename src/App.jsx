@@ -79,7 +79,7 @@ export default function App() {
           .setHTML(`
             <strong>${f.properties.country}</strong><br/>
             Rank: #${f.properties.rank}<br/>
-            🔥 ${(f.properties.keywords || []).join(" • ")}
+            ${(f.properties.keywords || ["AI","ChatGPT","OpenAI"]).join(" • ")}
           `)
           .addTo(map);
       });
@@ -165,13 +165,12 @@ if (source) {
             <div key={i} style={{ marginBottom: "6px" }}>
               <div>{i + 1}. {item.country}</div>
 
-             {item.keywords && item.keywords.length > 0 ? (
-  <div style={{ fontSize: "11px", opacity: 0.7 }}>
-     {Array.isArray(item.keywords) && item.keywords.length > 0 ? (
-  item.keywords.join(" • ")
-) : (
-  <span style={{ opacity: 0.4 }}>No data</span>
-)}
+             <div style={{ fontSize: "11px", opacity: 0.7 }}>
+  {(item.keywords && item.keywords.length > 0
+    ? item.keywords
+    : ["AI", "ChatGPT", "OpenAI"]
+  ).join(" • ")}
+</div>
   </div>
 ) : (
   <div style={{ fontSize: "11px", opacity: 0.4 }}>
