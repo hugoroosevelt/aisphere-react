@@ -97,6 +97,8 @@ map.on("click", (e) => {
 
           const sorted = [...data].sort((a, b) => b.score - a.score);
 
+           console.log("SORTED DATA 👉", sorted);
+
           setTopRegion(sorted[0]?.country || "N/A");
           setTopThree(sorted.slice(0, 5));
 
