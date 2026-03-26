@@ -86,7 +86,7 @@ export default function App() {
 
       // DATA FETCH
       const fetchData = async () => {
-        console.log("FETCH STARTED 🔥");
+        console.log("FETCH DATA RUNNING");
 
         try {
           const res = await fetch("https://aisphere-api.onrender.com/trends");
@@ -97,7 +97,13 @@ export default function App() {
           console.log("SORTED 👉", sorted);
 
           setTopRegion(sorted[0]?.country || "N/A");
-          setTopThree(sorted.slice(0, 5));
+          setTopThree(
+  sorted.slice(0, 5).map((item, index) => ({
+    country: item.country,
+    rank: index + 1,
+    keywords: Array.isArray(item.keywords) ? item.keywords : []
+  }))
+);
 
           const features = sorted.map((item, index) => ({
             type: "Feature",
@@ -112,16 +118,20 @@ export default function App() {
             }
           }));
 
-          map.getSource("points").setData({
-            type: "FeatureCollection",
-            features
-          });
+          const source = map.getSource("points");
+
+if (source) {
+  source.setData({
+    type: "FeatureCollection",
+    features
+  });
+}
 
         } catch (err) {
           console.error("API ERROR:", err);
         }
       };
-
+      console.log("MAP READY");
       fetchData();
       setInterval(fetchData, 10000);
     });
@@ -157,11 +167,15 @@ export default function App() {
 
              {item.keywords && item.keywords.length > 0 ? (
   <div style={{ fontSize: "11px", opacity: 0.7 }}>
-    🔥 {item.keywords.join(" • ")}
+     {Array.isArray(item.keywords) && item.keywords.length > 0 ? (
+  item.keywords.join(" • ")
+) : (
+  <span style={{ opacity: 0.4 }}>No data</span>
+)}
   </div>
 ) : (
   <div style={{ fontSize: "11px", opacity: 0.4 }}>
-    🔥 No keywords available
+    <span style={{ opacity: 0.4 }}>No data</span>
   </div>
 )}
             </div>
