@@ -5,10 +5,33 @@ mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const countryCoords = {
   "United States": [-98, 39],
-  "Mexico": [-102, 23],
+  "China": [104, 35],
   "India": [78.9, 21],
-  "Brazil": [-51, -10],
   "Germany": [10.4, 51],
+  "United Kingdom": [-3, 55],
+  "France": [2.2, 46],
+  "Japan": [138, 36],
+  "South Korea": [127.5, 36],
+  "Canada": [-106, 56],
+  "Australia": [134, -25],
+
+  "Mexico": [-102, 23],
+  "Brazil": [-51, -10],
+  "Argentina": [-64, -34],
+  "Chile": [-71, -35],
+  "Colombia": [-74, 4],
+
+  "Spain": [-3.7, 40],
+  "Italy": [12.5, 42.8],
+  "Netherlands": [5.3, 52.1],
+  "Sweden": [18.6, 60.1],
+  "Switzerland": [8.2, 46.8],
+
+  "United Arab Emirates": [54, 24],
+  "Saudi Arabia": [45, 24],
+  "South Africa": [24, -29],
+  "Nigeria": [8, 9],
+  "Singapore": [103.8, 1.3]
 };
 
 export default function App() {
@@ -98,7 +121,7 @@ export default function App() {
 
           setTopRegion(sorted[0]?.country || "N/A");
           setTopThree(
-  sorted.slice(0, 5).map((item, index) => ({
+  sorted.slice(0, 10).map((item, index) => ({
     country: item.country,
     rank: index + 1,
     keywords: Array.isArray(item.keywords) ? item.keywords : []
@@ -114,7 +137,7 @@ export default function App() {
             },
             geometry: {
               type: "Point",
-              coordinates: countryCoords[item.country] || [0, 0]
+              coordinates: countryCoords[item.country] ?? [0, 0]
             }
           }));
 
@@ -159,7 +182,7 @@ if (source) {
         <p>Top Region: {topRegion}</p>
 
         <div style={{ marginTop: "10px" }}>
-          <strong>Top Countries:</strong>
+          <strong>Top 10 Countries:</strong>
 
           {topThree.map((item, i) => (
             <div key={i} style={{ marginBottom: "6px" }}>
