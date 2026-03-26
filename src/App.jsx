@@ -47,19 +47,81 @@ export default function App() {
     });
 
     map.on("load", () => {
-      map.addSource("points", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] }
+
+  map.addSource("points", {
+    type: "geojson",
+    data: {
+      type: "FeatureCollection",
+      features: []
+    }
+  });
+
+  map.addLayer({
+    id: "points",
+    type: "circle",
+    source: "points",
+    paint: {
+      "circle-radius": 8,
+      "circle-color": "#00ff88"
+    }
+  });
+
+  // ✅ CLICK HANDLER
+  map.on("click", (e) => {
+    const features = map.queryRenderedFeatures(e.point, {
+      layers: ["points"]
+    });
+
+    if (!features.length) return;
+
+    const f = features[0];
+
+    new mapboxgl.Popup()
+      .setLngLat(f.geometry.coordinates)
+      .setHTML(`
+        <strong>${f.properties.country}</strong><br/>
+        Rank: #${f.properties.rank}<br/>
+        🔥 ${(f.properties.keywords || []).join(" • ")}
+      `)
+      .addTo(map);
+  });
+
+  const fetchData = async () => {
+    try {
+      const res = await fetch("https://aisphere-api.onrender.com/trends");
+      const data = await res.json();
+
+      const sorted = [...data].sort((a, b) => b.score - a.score);
+
+      console.log("SORTED 👉", sorted);
+
+      setTopRegion(sorted[0]?.country || "N/A");
+      setTopThree(sorted.slice(0, 5));
+
+      const features = sorted.map((item, index) => ({
+        type: "Feature",
+        properties: {
+          country: item.country,
+          rank: index + 1,
+          keywords: item.keywords || []
+        },
+        geometry: {
+          type: "Point",
+          coordinates: countryCoords[item.country] || [0, 0]
+        }
+      }));
+
+      map.getSource("points").setData({
+        type: "FeatureCollection",
+        features
       });
 
-     map.addLayer({
-  id: "points",
-  type: "circle",
-  source: "points",
-  paint: {
-    "circle-radius": 8,
-    "circle-color": "#00ff88"
-  }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchData();
 });
 
 // ✅ CLICK HANDLER (OUTSIDE addLayer)
@@ -186,7 +248,7 @@ setLastUpdated(new Date());
       borderRadius: "14px"
     }}>
       <h3>🌐 AI Search Activity</h3>
-
+      <h1 style={{ color: "yellow" }}>VERSION 5</h1>  
       <p>{liveCount.toLocaleString()}</p>
       <p>Top Region: {topRegion}</p>
 
