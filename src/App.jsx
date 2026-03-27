@@ -187,17 +187,17 @@ if (source) {
           <strong>Top 10 Countries:</strong>
 
           {topThree.map((item, i) => (
-            <div key={i} style={{ marginBottom: "6px" }}>
-              <div>{i + 1}. {item.country}</div>
+  <div key={i} style={{ marginBottom: "10px" }}>
+    <div>{i + 1}. {item.country}</div>
 
-             <div style={{ fontSize: "11px", opacity: 0.7 }}>
-  {(item.keywords && item.keywords.length > 0
-    ? item.keywords
-    : ["AI", "ChatGPT", "OpenAI"]
-  ).join(" • ")}
-</div>
+    <div style={{ fontSize: "11px", opacity: 0.7 }}>
+      {(item.keywords && item.keywords.length > 0
+        ? item.keywords
+        : ["AI", "ChatGPT", "OpenAI"]
+      ).join(" • ")}
+    </div>
   </div>
-) : (
+))}
   <div style={{ fontSize: "11px", opacity: 0.4 }}>
     <span style={{ opacity: 0.4 }}>No data</span>
   </div>
