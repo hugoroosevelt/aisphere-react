@@ -90,48 +90,62 @@ export default function App() {
   }, []);
 
   // 📊 FETCH + LIVE UPDATE
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch("https://aisphere-api.onrender.com/trends");
-        const json = await res.json();
+useEffect(() => {
+  if (mapRef.current) return;
 
-        const sorted = [...json].sort((a, b) => b.score - a.score);
+  const initMap = () => {
+    if (!mapContainer.current) {
+      requestAnimationFrame(initMap);
+      return;
+    }
 
-        setData(sorted.slice(0, 10));
-        setTopRegion(sorted[0]?.country || "N/A");
+    const map = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/dark-v11",
+      center: [0, 20],
+      zoom: 1.5,
+    });
 
-        // 🔥 UPDATE MAP
-        if (mapRef.current && mapRef.current.getSource("points")) {
-          const features = sorted.map((item) => ({
-            type: "Feature",
-            properties: {
-              country: item.country,
-              score: item.score,
-            },
-            geometry: {
-              type: "Point",
-              coordinates: countryCoords[item.country] || [0, 0],
-            },
-          }));
+    mapRef.current = map;
 
-          mapRef.current.getSource("points").setData({
-            type: "FeatureCollection",
-            features,
-          });
-        }
+    map.on("load", () => {
+      map.addSource("points", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: [],
+        },
+      });
 
-      } catch (err) {
-        console.error("FETCH ERROR:", err);
-      }
-    };
+      map.addLayer({
+        id: "points-layer",
+        type: "circle",
+        source: "points",
+        paint: {
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["get", "score"],
+            50, 5,
+            100, 15
+          ],
+          "circle-color": [
+            "interpolate",
+            ["linear"],
+            ["get", "score"],
+            50, "#00ff88",
+            100, "#ff3b3b"
+          ],
+          "circle-opacity": 0.8,
+        },
+      });
 
-    fetchData();
+      console.log("MAP FULLY STABLE ✅");
+    });
+  };
 
-    const interval = setInterval(fetchData, 5000); // 🔥 live updates
-
-    return () => clearInterval(interval);
-  }, []);
+  initMap();
+}, []);
 
   return (
     <div style={{ position: "relative" }}>
