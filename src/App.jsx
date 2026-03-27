@@ -52,7 +52,7 @@ export default function App() {
 
   // 🌍 MAP
   useEffect(() => {
-    if (mapRef.current) return;
+  if (mapRef.current || !mapContainer.current) return;
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
@@ -120,13 +120,20 @@ export default function App() {
           console.log("SORTED 👉", sorted);
 
           setTopRegion(sorted[0]?.country || "N/A");
-          setTopThree(
-  sorted.slice(0, 10).map((item, index) => ({
+          const top10 = sorted.slice(0, 10);
+
+console.log("TOP10 LENGTH:", top10.length);
+
+setTopThree(
+  top10.map((item, index) => ({
     country: item.country,
     rank: index + 1,
     keywords: Array.isArray(item.keywords) ? item.keywords : []
   }))
 );
+
+console.log("FULL DATA LENGTH:", data.length);
+console.log("SORTED LENGTH:", sorted.length);
 
           const features = sorted.map((item, index) => ({
             type: "Feature",
