@@ -65,7 +65,50 @@ map.on('style.load', () => {
 });
     mapRef.current = map;
 
-    map.on("load", () => {
+    map.on('load', () => {
+  map.setProjection('globe');
+
+  map.setFog({
+    color: 'rgb(186, 210, 235)',
+    'high-color': 'rgb(36, 92, 223)',
+    'horizon-blend': 0.02,
+    'space-color': 'rgb(11, 11, 25)',
+    'star-intensity': 0.6
+  });
+
+  // 👇 KEEP YOUR EXISTING CODE HERE
+  map.addSource("points", {
+    type: "geojson",
+    data: {
+      type: "FeatureCollection",
+      features: [],
+    },
+  });
+
+  map.addLayer({
+    id: "points-layer",
+    type: "circle",
+    source: "points",
+    paint: {
+      "circle-radius": [
+        "interpolate",
+        ["linear"],
+        ["get", "score"],
+        50, 5,
+        100, 15
+      ],
+      "circle-color": [
+        "interpolate",
+        ["linear"],
+        ["get", "score"],
+        50, "#00ff88",
+        100, "#ff3b3b"
+      ],
+      "circle-opacity": 0.8,
+    },
+  });
+
+});
       map.addSource("points", {
         type: "geojson",
         data: {
