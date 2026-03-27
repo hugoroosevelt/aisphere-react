@@ -54,15 +54,29 @@ export default function App() {
   useEffect(() => {
   if (mapRef.current || !mapContainer.current) return;
 
-    const map = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/dark-v11",
-      center: [0, 20],
-      zoom: 1.5,
-      projection: "mercator" // safer than globe
-    });
+    let map;
 
-    mapRef.current = map;
+try {
+  if (!mapContainer.current) {
+    console.warn("Map container not ready");
+    return;
+  }
+
+  map = new mapboxgl.Map({
+    container: mapContainer.current,
+    style: "mapbox://styles/mapbox/dark-v11",
+    center: [0, 20],
+    zoom: 1.5,
+    projection: "mercator"
+  });
+
+} catch (err) {
+  console.error("💥 MAP INIT CRASH:", err);
+  return;
+}
+
+    if (!map) return;
+mapRef.current = map;
 
     map.on("load", () => {
       console.log("MAP LOADED ✅");
