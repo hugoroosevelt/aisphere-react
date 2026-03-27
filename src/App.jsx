@@ -15,6 +15,21 @@ const countryCoords = {
   "South Korea": [127.5, 36],
   "Canada": [-106, 56],
   "Australia": [134, -25],
+  "Mexico": [-102, 23],
+  "Brazil": [-51, -10],
+  "Argentina": [-64, -34],
+  "Chile": [-71, -35],
+  "Colombia": [-74, 4],
+  "Spain": [-3.7, 40],
+  "Italy": [12.5, 42.8],
+  "Netherlands": [5.3, 52.1],
+  "Sweden": [18.6, 60.1],
+  "Switzerland": [8.2, 46.8],
+  "United Arab Emirates": [54, 24],
+  "Saudi Arabia": [45, 24],
+  "South Africa": [24, -29],
+  "Nigeria": [8, 9],
+  "Singapore": [103.8, 1.3],
 };
 
 export default function App() {
@@ -24,14 +39,9 @@ export default function App() {
   const [data, setData] = useState([]);
   const [topRegion, setTopRegion] = useState("Loading...");
 
-  // 🌍 MAP INIT (SAFE + STABLE)
+  // 🌍 MAP INIT (robust against hard refresh)
   useEffect(() => {
-  if (!mapContainer.current) return;
-  if (mapRef.current) return;
-
-  // ⏳ Wait for DOM to stabilize (critical for Vercel + React)
-  const timer = setTimeout(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || mapRef.current) return;
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
@@ -43,28 +53,73 @@ export default function App() {
     mapRef.current = map;
 
     map.on("load", () => {
-      console.log("MAP STABLE ✅");
+      map.addSource("points", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: [],
+        },
+      });
+
+      map.addLayer({
+        id: "points-layer",
+        type: "circle",
+        source: "points",
+        paint: {
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["get", "score"],
+            50, 5,
+            100, 15
+          ],
+          "circle-color": [
+            "interpolate",
+            ["linear"],
+            ["get", "score"],
+            50, "#00ff88",
+            100, "#ff3b3b"
+          ],
+          "circle-opacity": 0.8,
+        },
+      });
+
+      console.log("MAP READY ✅");
     });
 
-  }, 100); // 👈 small delay fixes hydration issue
+  }, []);
 
-  return () => clearTimeout(timer);
-
-}, []);
-
-  // 📊 FETCH DATA
+  // 📊 FETCH + LIVE UPDATE
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await fetch("https://aisphere-api.onrender.com/trends");
         const json = await res.json();
 
-        console.log("DATA:", json);
-
         const sorted = [...json].sort((a, b) => b.score - a.score);
 
         setData(sorted.slice(0, 10));
         setTopRegion(sorted[0]?.country || "N/A");
+
+        // 🔥 UPDATE MAP
+        if (mapRef.current && mapRef.current.getSource("points")) {
+          const features = sorted.map((item) => ({
+            type: "Feature",
+            properties: {
+              country: item.country,
+              score: item.score,
+            },
+            geometry: {
+              type: "Point",
+              coordinates: countryCoords[item.country] || [0, 0],
+            },
+          }));
+
+          mapRef.current.getSource("points").setData({
+            type: "FeatureCollection",
+            features,
+          });
+        }
 
       } catch (err) {
         console.error("FETCH ERROR:", err);
@@ -72,6 +127,10 @@ export default function App() {
     };
 
     fetchData();
+
+    const interval = setInterval(fetchData, 5000); // 🔥 live updates
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -79,16 +138,16 @@ export default function App() {
       
       {/* 🌍 MAP */}
       <div
-  ref={mapContainer}
-  style={{
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100vh", // ✅ THIS FIXES EVERYTHING
-    zIndex: 0
-  }}
-/>
+        ref={mapContainer}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100vh",
+          zIndex: 0,
+        }}
+      />
 
       {/* 📊 PANEL */}
       <div
@@ -102,7 +161,8 @@ export default function App() {
           borderRadius: "14px",
           width: "260px",
           maxHeight: "80vh",
-          overflowY: "auto"
+          overflowY: "auto",
+          zIndex: 1,
         }}
       >
         <h3>🌐 AI Search Activity</h3>
@@ -116,10 +176,7 @@ export default function App() {
             <div>{i + 1}. {item.country}</div>
 
             <div style={{ fontSize: "11px", opacity: 0.7 }}>
-              {(item.keywords && item.keywords.length > 0
-                ? item.keywords
-                : ["AI", "ChatGPT", "OpenAI"]
-              ).join(" • ")}
+              {(item.keywords?.length ? item.keywords : ["AI", "ChatGPT", "OpenAI"]).join(" • ")}
             </div>
           </div>
         ))}
