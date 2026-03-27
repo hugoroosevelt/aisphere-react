@@ -139,9 +139,7 @@ useEffect(() => {
           "circle-opacity": 0.8,
         },
       });
-      setTimeout(() => {
-    map.resize();
-    }, 300);
+
       console.log("MAP FULLY STABLE ✅");
     });
   };
