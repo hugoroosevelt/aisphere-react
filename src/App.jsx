@@ -26,8 +26,12 @@ export default function App() {
 
   // 🌍 MAP INIT (SAFE + STABLE)
   useEffect(() => {
+  if (!mapContainer.current) return;
+  if (mapRef.current) return;
+
+  // ⏳ Wait for DOM to stabilize (critical for Vercel + React)
+  const timer = setTimeout(() => {
     if (!mapContainer.current) return;
-    if (mapRef.current) return;
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
@@ -39,9 +43,14 @@ export default function App() {
     mapRef.current = map;
 
     map.on("load", () => {
-      console.log("MAP LOADED ✅");
+      console.log("MAP STABLE ✅");
     });
-  }, []);
+
+  }, 100); // 👈 small delay fixes hydration issue
+
+  return () => clearTimeout(timer);
+
+}, []);
 
   // 📊 FETCH DATA
   useEffect(() => {
