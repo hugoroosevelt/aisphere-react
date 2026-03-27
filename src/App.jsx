@@ -36,14 +36,24 @@ export default function App() {
   useEffect(() => {
   if (!mapContainer.current) return;
 
-  const timer = setTimeout(() => {
-    try {
-      const map = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: "mapbox://styles/mapbox/dark-v11",
-        center: [0, 20],
-        zoom: 1.5
-      });
+  // 🔒 Prevent multiple initializations
+  if (mapContainer.current._mapInstance) return;
+
+  const map = new mapboxgl.Map({
+    container: mapContainer.current,
+    style: "mapbox://styles/mapbox/dark-v11",
+    center: [0, 20],
+    zoom: 1.5
+  });
+
+  // 💾 Save instance directly on DOM (key fix)
+  mapContainer.current._mapInstance = map;
+
+  map.on("load", () => {
+    console.log("MAP FULLY LOADED ✅");
+  });
+
+}, []);
 
       console.log("MAP INIT OK");
 
