@@ -45,7 +45,7 @@ export default function App() {
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
-      style: "mapbox://styles/mapbox/light-v11",
+      style: "mapbox://styles/mapbox/navigation-night-v1",
       center: [0, 20],
       zoom: 1.5,
     });
