@@ -70,9 +70,16 @@ export default function App() {
       
       {/* 🌍 MAP */}
       <div
-        ref={mapContainer}
-        style={{ position: "absolute", top: 0, bottom: 0, width: "100%" }}
-      />
+  ref={mapContainer}
+  style={{
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100vh", // ✅ THIS FIXES EVERYTHING
+    zIndex: 0
+  }}
+/>
 
       {/* 📊 PANEL */}
       <div
