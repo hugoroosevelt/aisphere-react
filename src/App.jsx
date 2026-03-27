@@ -43,26 +43,10 @@ export default function App() {
   const [liveCount, setLiveCount] = useState(2440000);
 
   // 🔢 LIVE COUNTER
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLiveCount(prev => prev + Math.floor(Math.random() * 200));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+ useEffect(() => {
+  if (!mapContainer.current) return;
 
-  // 🌍 MAP
-  useEffect(() => {
-  if (mapRef.current || !mapContainer.current) return;
-
-    let map;
-
-try {
-  if (!mapContainer.current) {
-    console.warn("Map container not ready");
-    return;
-  }
-
-  map = new mapboxgl.Map({
+  const map = new mapboxgl.Map({
     container: mapContainer.current,
     style: "mapbox://styles/mapbox/dark-v11",
     center: [0, 20],
@@ -70,36 +54,71 @@ try {
     projection: "mercator"
   });
 
-} catch (err) {
-  console.error("💥 MAP INIT CRASH:", err);
-  return;
-}
+  mapRef.current = map;
 
-    if (!map) return;
-mapRef.current = map;
+  map.on("load", () => {
+    console.log("MAP READY");
 
-    map.on("load", () => {
-      console.log("MAP LOADED ✅");
+    map.addSource("points", {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: []
+      }
+    });
 
-      // SOURCE
-      map.addSource("points", {
-        type: "geojson",
-        data: {
+    map.addLayer({
+      id: "points",
+      type: "circle",
+      source: "points",
+      paint: {
+        "circle-radius": 8,
+        "circle-color": "#00ff88"
+      }
+    });
+
+    const fetchData = async () => {
+      try {
+        const res = await fetch("https://aisphere-api.onrender.com/trends");
+        const data = await res.json();
+
+        console.log("DATA LENGTH:", data.length);
+
+        const top10 = data.slice(0, 10);
+
+        setTopRegion(top10[0]?.country || "N/A");
+        setTopThree(top10);
+
+        const features = top10.map((item, index) => ({
+          type: "Feature",
+          properties: {
+            country: item.country,
+            rank: index + 1,
+            keywords: item.keywords || []
+          },
+          geometry: {
+            type: "Point",
+            coordinates: countryCoords[item.country] || [0, 0]
+          }
+        }));
+
+        map.getSource("points").setData({
           type: "FeatureCollection",
-          features: []
-        }
-      });
+          features
+        });
 
-      // LAYER
-      map.addLayer({
-        id: "points",
-        type: "circle",
-        source: "points",
-        paint: {
-          "circle-radius": 8,
-          "circle-color": "#00ff88"
-        }
-      });
+      } catch (err) {
+        console.error("FETCH ERROR:", err);
+      }
+    };
+
+    fetchData();
+    setInterval(fetchData, 10000);
+  });
+
+  return () => map.remove();
+
+}, []);
 
       // CLICK HANDLER
       map.on("click", (e) => {
