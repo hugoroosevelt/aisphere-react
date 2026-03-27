@@ -39,7 +39,7 @@ export default function App() {
   const [data, setData] = useState([]);
   const [topRegion, setTopRegion] = useState("Loading...");
 
-  // 🌍 MAP INIT (robust against hard refresh)
+  // 🌍 MAP INIT (ONLY ONCE)
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
 
@@ -90,62 +90,47 @@ export default function App() {
   }, []);
 
   // 📊 FETCH + LIVE UPDATE
-useEffect(() => {
-  if (mapRef.current) return;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("https://aisphere-api.onrender.com/trends");
+        const json = await res.json();
 
-  const initMap = () => {
-    if (!mapContainer.current) {
-      requestAnimationFrame(initMap);
-      return;
-    }
+        const sorted = [...json].sort((a, b) => b.score - a.score);
 
-    const map = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/dark-v11",
-      center: [0, 20],
-      zoom: 1.5,
-    });
+        setData(sorted.slice(0, 10));
+        setTopRegion(sorted[0]?.country || "N/A");
 
-    mapRef.current = map;
+        // 🔥 update map
+        if (mapRef.current?.getSource("points")) {
+          const features = sorted.map((item) => ({
+            type: "Feature",
+            properties: {
+              score: item.score,
+            },
+            geometry: {
+              type: "Point",
+              coordinates: countryCoords[item.country] || [0, 0],
+            },
+          }));
 
-    map.on("load", () => {
-      map.addSource("points", {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: [],
-        },
-      });
+          mapRef.current.getSource("points").setData({
+            type: "FeatureCollection",
+            features,
+          });
+        }
 
-      map.addLayer({
-        id: "points-layer",
-        type: "circle",
-        source: "points",
-        paint: {
-          "circle-radius": [
-            "interpolate",
-            ["linear"],
-            ["get", "score"],
-            50, 5,
-            100, 15
-          ],
-          "circle-color": [
-            "interpolate",
-            ["linear"],
-            ["get", "score"],
-            50, "#00ff88",
-            100, "#ff3b3b"
-          ],
-          "circle-opacity": 0.8,
-        },
-      });
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-      console.log("MAP FULLY STABLE ✅");
-    });
-  };
+    fetchData();
 
-  initMap();
-}, []);
+    const interval = setInterval(fetchData, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div style={{ position: "relative" }}>
