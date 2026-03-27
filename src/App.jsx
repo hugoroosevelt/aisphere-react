@@ -34,17 +34,28 @@ export default function App() {
 
   // 🌍 MAP (SAFE INIT)
   useEffect(() => {
-    if (!mapContainer.current) return;
+  if (!mapContainer.current) return;
 
-    const map = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/dark-v11",
-      center: [0, 20],
-      zoom: 1.5
-    });
+  const timer = setTimeout(() => {
+    try {
+      const map = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/dark-v11",
+        center: [0, 20],
+        zoom: 1.5
+      });
 
-    return () => map.remove();
-  }, []);
+      console.log("MAP INIT OK");
+
+      return () => map.remove();
+
+    } catch (err) {
+      console.error("MAP ERROR:", err);
+    }
+  }, 300); // 👈 key fix (delay)
+
+  return () => clearTimeout(timer);
+}, []);
 
   return (
     <div style={{ position: "relative", height: "100vh" }}>
