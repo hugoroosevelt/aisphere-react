@@ -44,12 +44,25 @@ export default function App() {
     if (!mapContainer.current || mapRef.current) return;
 
     const map = new mapboxgl.Map({
+      map.on('style.load', () => {
+      map.setProjection('globe');
+      });
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/navigation-night-v1",
       center: [0, 20],
       zoom: 1.5,
     });
+map.on('style.load', () => {
+  map.setProjection('globe');
 
+  map.setFog({
+    color: 'rgb(186, 210, 235)', // sky
+    'high-color': 'rgb(36, 92, 223)', // upper atmosphere
+    'horizon-blend': 0.02,
+    'space-color': 'rgb(11, 11, 25)', // space
+    'star-intensity': 0.6
+  });
+});
     mapRef.current = map;
 
     map.on("load", () => {
