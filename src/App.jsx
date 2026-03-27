@@ -1,14 +1,47 @@
-import { useEffect, useState, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-console.log("TOKEN:", import.meta.env.VITE_MAPBOX_TOKEN);
+import { useEffect, useRef, useState } from "react";
+
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
+const countryCoords = {
+  "United States": [-98, 39],
+  "China": [104, 35],
+  "India": [78.9, 21],
+  "Germany": [10.4, 51],
+  "United Kingdom": [-3, 55],
+  "France": [2.2, 46],
+  "Japan": [138, 36],
+  "South Korea": [127.5, 36],
+  "Canada": [-106, 56],
+  "Australia": [134, -25],
+};
+
 export default function App() {
+  const mapContainer = useRef(null);
+  const mapRef = useRef(null);
+
   const [data, setData] = useState([]);
   const [topRegion, setTopRegion] = useState("Loading...");
 
-  const mapContainer = useRef(null);
+  // 🌍 MAP INIT (SAFE + STABLE)
+  useEffect(() => {
+    if (!mapContainer.current) return;
+    if (mapRef.current) return;
+
+    const map = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/dark-v11",
+      center: [0, 20],
+      zoom: 1.5,
+    });
+
+    mapRef.current = map;
+
+    map.on("load", () => {
+      console.log("MAP LOADED ✅");
+    });
+  }, []);
 
   // 📊 FETCH DATA
   useEffect(() => {
@@ -19,10 +52,10 @@ export default function App() {
 
         console.log("DATA:", json);
 
-        const top10 = json.slice(0, 10);
+        const sorted = [...json].sort((a, b) => b.score - a.score);
 
-        setData(top10);
-        setTopRegion(top10[0]?.country || "N/A");
+        setData(sorted.slice(0, 10));
+        setTopRegion(sorted[0]?.country || "N/A");
 
       } catch (err) {
         console.error("FETCH ERROR:", err);
@@ -32,80 +65,45 @@ export default function App() {
     fetchData();
   }, []);
 
-  // 🌍 MAP (SAFE INIT)
-  useEffect(() => {
-  if (!mapContainer.current) return;
-
-  // 🔒 Prevent multiple initializations
-  if (mapContainer.current._mapInstance) return;
-
-  const map = new mapboxgl.Map({
-    container: mapContainer.current,
-    style: "mapbox://styles/mapbox/dark-v11",
-    center: [0, 20],
-    zoom: 1.5
-  });
-
-  // 💾 Save instance directly on DOM (key fix)
-  mapContainer.current._mapInstance = map;
-
-  map.on("load", () => {
-    console.log("MAP FULLY LOADED ✅");
-  });
-
-}, []);
-
-      console.log("MAP INIT OK");
-
-      return () => map.remove();
-
-    } catch (err) {
-      console.error("MAP ERROR:", err);
-    }
-  }, 300); // 👈 key fix (delay)
-
-  return () => clearTimeout(timer);
-}, []);
-
   return (
-    <div style={{ position: "relative", height: "100vh" }}>
+    <div style={{ position: "relative" }}>
       
-      {/* 🌍 MAP BACKGROUND */}
+      {/* 🌍 MAP */}
       <div
         ref={mapContainer}
-        style={{
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          width: "100%"
-        }}
+        style={{ position: "absolute", top: 0, bottom: 0, width: "100%" }}
       />
 
       {/* 📊 PANEL */}
       <div
         style={{
-          position: "relative",
-          zIndex: 1,
-          padding: "40px",
+          position: "absolute",
+          top: 20,
+          left: 20,
+          background: "rgba(0,0,0,0.75)",
           color: "white",
-          maxWidth: "400px",
-          background: "rgba(0,0,0,0.7)",
-          borderRadius: "12px",
-          margin: "20px"
+          padding: "18px",
+          borderRadius: "14px",
+          width: "260px",
+          maxHeight: "80vh",
+          overflowY: "auto"
         }}
       >
-        <h1>🌐 AI Search Activity</h1>
+        <h3>🌐 AI Search Activity</h3>
 
-        <h3>Top Region: {topRegion}</h3>
+        <p>Top Region: {topRegion}</p>
 
-        <h2>Top Countries:</h2>
+        <strong>Top Countries:</strong>
 
         {data.map((item, i) => (
-          <div key={i} style={{ marginBottom: "12px" }}>
-            <strong>{i + 1}. {item.country}</strong>
+          <div key={i} style={{ marginBottom: "8px" }}>
+            <div>{i + 1}. {item.country}</div>
 
-            <div style={{ fontSize: "12px", opacity: 0.8 }}>
-              {(item.keywords || []).join(" • ")}
+            <div style={{ fontSize: "11px", opacity: 0.7 }}>
+              {(item.keywords && item.keywords.length > 0
+                ? item.keywords
+                : ["AI", "ChatGPT", "OpenAI"]
+              ).join(" • ")}
             </div>
           </div>
         ))}
