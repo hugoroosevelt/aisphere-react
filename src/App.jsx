@@ -39,76 +39,31 @@ export default function App() {
   const [data, setData] = useState([]);
   const [topRegion, setTopRegion] = useState("Loading...");
 
-  // 🌍 MAP INIT (ONLY ONCE)
+  // 🌍 INIT MAP
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
 
     const map = new mapboxgl.Map({
-      map.on('style.load', () => {
-      map.setProjection('globe');
-      });
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/navigation-night-v1",
       center: [0, 20],
       zoom: 1.5,
+      projection: "globe", // ✅ THIS IS THE KEY FIX
     });
-map.on('style.load', () => {
-  map.setProjection('globe');
 
-  map.setFog({
-    color: 'rgb(186, 210, 235)', // sky
-    'high-color': 'rgb(36, 92, 223)', // upper atmosphere
-    'horizon-blend': 0.02,
-    'space-color': 'rgb(11, 11, 25)', // space
-    'star-intensity': 0.6
-  });
-});
     mapRef.current = map;
 
-    map.on('load', () => {
-  map.setProjection('globe');
+    map.on("load", () => {
+      // 🌌 Atmosphere
+      map.setFog({
+        color: "rgb(186, 210, 235)",
+        "high-color": "rgb(36, 92, 223)",
+        "horizon-blend": 0.02,
+        "space-color": "rgb(11, 11, 25)",
+        "star-intensity": 0.6,
+      });
 
-  map.setFog({
-    color: 'rgb(186, 210, 235)',
-    'high-color': 'rgb(36, 92, 223)',
-    'horizon-blend': 0.02,
-    'space-color': 'rgb(11, 11, 25)',
-    'star-intensity': 0.6
-  });
-
-  // 👇 KEEP YOUR EXISTING CODE HERE
-  map.addSource("points", {
-    type: "geojson",
-    data: {
-      type: "FeatureCollection",
-      features: [],
-    },
-  });
-
-  map.addLayer({
-    id: "points-layer",
-    type: "circle",
-    source: "points",
-    paint: {
-      "circle-radius": [
-        "interpolate",
-        ["linear"],
-        ["get", "score"],
-        50, 5,
-        100, 15
-      ],
-      "circle-color": [
-        "interpolate",
-        ["linear"],
-        ["get", "score"],
-        50, "#00ff88",
-        100, "#ff3b3b"
-      ],
-      "circle-opacity": 0.8,
-    },
-  });
-
-});
+      // 📍 Data layer
       map.addSource("points", {
         type: "geojson",
         data: {
@@ -127,25 +82,25 @@ map.on('style.load', () => {
             ["linear"],
             ["get", "score"],
             50, 5,
-            100, 15
+            100, 15,
           ],
           "circle-color": [
             "interpolate",
             ["linear"],
             ["get", "score"],
             50, "#00ff88",
-            100, "#ff3b3b"
+            100, "#ff3b3b",
           ],
           "circle-opacity": 0.8,
         },
       });
 
-      console.log("MAP READY ✅");
+      console.log("🌍 Globe READY");
     });
 
   }, []);
 
-  // 📊 FETCH + LIVE UPDATE
+  // 📊 FETCH DATA
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -157,13 +112,10 @@ map.on('style.load', () => {
         setData(sorted.slice(0, 10));
         setTopRegion(sorted[0]?.country || "N/A");
 
-        // 🔥 update map
         if (mapRef.current?.getSource("points")) {
           const features = sorted.map((item) => ({
             type: "Feature",
-            properties: {
-              score: item.score,
-            },
+            properties: { score: item.score },
             geometry: {
               type: "Point",
               coordinates: countryCoords[item.country] || [0, 0],
@@ -182,7 +134,6 @@ map.on('style.load', () => {
     };
 
     fetchData();
-
     const interval = setInterval(fetchData, 5000);
 
     return () => clearInterval(interval);
@@ -224,7 +175,9 @@ map.on('style.load', () => {
 
         <p>Top Region: {topRegion}</p>
 
-        <strong>Top Countries:</strong>
+        <strong style={{ display: "block", marginTop: "10px", marginBottom: "10px" }}>
+          Top Countries:
+        </strong>
 
         {data.map((item, i) => (
           <div key={i} style={{ marginBottom: "8px" }}>
