@@ -1,3 +1,6 @@
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { useRef } from "react";
 import { useEffect, useState } from "react";
 
 export default function App() {
