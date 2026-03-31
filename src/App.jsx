@@ -105,9 +105,9 @@ export default function App() {
     const fetchData = async () => {
       try {
         const res = await fetch("https://aisphere-api.onrender.com/trends");
-        const json = await res.json();
+       const json = await res.json();
 
-        const sorted = [...json].sort((a, b) => b.score - a.score);
+const sorted = [...json.current].sort((a, b) => b.score - a.score);
 
         setData(sorted.slice(0, 10));
         setTopRegion(sorted[0]?.country || "N/A");
@@ -117,7 +117,7 @@ export default function App() {
             type: "Feature",
             properties: { score: item.score },
             geometry: {
-              type: "Point",
+              type: "Point", 
               coordinates: countryCoords[item.country] || [0, 0],
             },
           }));
